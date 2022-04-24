@@ -18,14 +18,14 @@ public class Server {
     private final int chanceDeEnviarOPacote;
     private final Timer timer = new Timer();
     private boolean run = true;
+    private PrintWriter out;
+    private List<String> pacotesProntosParaTranferir = new ArrayList<>();
+
 
     public Server(int PORTA, int chanceDeEnviarOPacote) {
         this.PORTA = PORTA;
         this.chanceDeEnviarOPacote = chanceDeEnviarOPacote;
     }
-
-    private PrintWriter out;
-    private List<String> pacotesProntosParaTranferir = new ArrayList<>();
 
     public void iniciaServidor() {
 
