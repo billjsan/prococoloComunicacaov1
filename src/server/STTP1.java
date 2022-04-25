@@ -17,18 +17,18 @@ public class STTP1 {
     /**
      * constantes de controle
      */
-    public static final int INTERN_ERROR_LAST_PACKAGE_INDEX_NOT_A_NUMBER = -222222222;
-    public static final int USER_ENTRY_CODE_ERROR_NOT_VALID_TEXT = -33333333;
-    public static final int USER_ENTRY_CODE_ERROR_IS_EMPTY = -11111111;
-    public static final int USER_ENTRY_CODE_ERROR_NO_MATCH_PARAM = -99999999;
+    private final int USER_ENTRY_CODE_ERROR_NOT_VALID_NUMBER = -10;
+    private final int USER_ENTRY_CODE_ERROR_IS_EMPTY = -12;
+    private final int USER_ENTRY_CODE_ERROR_NOT_VALID_TEXT = -11;
+    private final int USER_ENTRY_CODE_ERROR_NO_MATCH_PARAM = -13;
 
-    public static final int USER_ENTRY_CODE_END = -5516546;
-    public static final int USER_ENTRY_CODE_BEGIN = -55618155;
-    public static final int USER_ENTRY_CODE_HELP = -55754848;
+    private final int USER_ENTRY_CODE_END = -14;
+    private final int USER_ENTRY_CODE_BEGIN = -15;
+    private final int USER_ENTRY_CODE_HELP = -16;
 
-    public static final int DIALOG_MESSAGE_END_PROGRAM = -242224;
-    public static final int DIALOG_MESSAGE_END_TRANSFERENCE = -25215;
-    public static final int DIALOG_MESSAGE_START_TRANSFERENCE = -550514;
+    private final int DIALOG_MESSAGE_END_PROGRAM = -17;
+    private final int DIALOG_MESSAGE_END_TRANSFERENCE = -18;
+    private final int DIALOG_MESSAGE_START_TRANSFERENCE = -19;
 
     private final int PORT;
     private final int DELAY_RESEND_LAST_PACKAGE;
@@ -83,6 +83,7 @@ public class STTP1 {
                 output = new PrintWriter(outputStream, true);
 
                 show(getHomeScreen(), output);
+                if (Logger.ISLOGABLE) Logger.d("startServer", "server is running");
                 while (isServerRunning) {
 
                     // se o usuario envou alguma coisa
@@ -92,8 +93,10 @@ public class STTP1 {
 
                         switch (action) {
                             case USER_ENTRY_CODE_BEGIN:
-                                isTransferring = true;
-                                show(getDialogMessage(DIALOG_MESSAGE_START_TRANSFERENCE), output);
+                                if (!isTransferring) {
+                                    isTransferring = true;
+                                    show(getDialogMessage(DIALOG_MESSAGE_START_TRANSFERENCE), output);
+                                }
                                 break;
                             case USER_ENTRY_CODE_END:
                                 if (isTransferring) {
@@ -104,8 +107,8 @@ public class STTP1 {
                                     lastPackageSentBackup = null;
                                     lastPackageSentIndex = -1;
 
+                                    cancelResendLastPackageSchedule();
                                     show(getDialogMessage(DIALOG_MESSAGE_END_TRANSFERENCE), output);
-                                    //show(getDialogMessage(DIALOG_MESSAGE_END_TRANSFERENCE), output);
                                     show(getHomeScreen(), output);
                                 } else {
                                     isServerRunning = false;
@@ -124,7 +127,10 @@ public class STTP1 {
                         }
 
                         if (isTransferring) {
+                            String TAG = "isTransferring";
+
                             if (action == USER_ENTRY_CODE_BEGIN) {
+                                if (Logger.ISLOGABLE) Logger.d(TAG, "send first package");
                                 //prepara os pacotes para envio
                                 packagesReadyToSend =
                                         addHeaderToDataset(prepareDataSet(DATASET, MAX_LENGTH_PACK),
@@ -132,34 +138,40 @@ public class STTP1 {
                                 //envia o primeiro pacote
                                 sendNewPackage(packagesReadyToSend.get(0), output, 0);
 
+                            } else if (action == lastPackageSentIndex) {
+                                if (Logger.ISLOGABLE) Logger.d(TAG, "resending last package");
+                                resendLastPackage(output);
+                            } else if (action == lastPackageSentIndex + 1
+                                    && action < packagesReadyToSend.size()) {
+                                if (Logger.ISLOGABLE) Logger.d(TAG, "sending next package");
+                                cancelResendLastPackageSchedule();
+                                sendNewPackage(packagesReadyToSend.get(action), output, action);
+                            } else if (action == packagesReadyToSend.size()) {
+                                if (Logger.ISLOGABLE) Logger.d(TAG, "end of file");
+                                show("o dado acabou", output);
+                                isTransferring = false;
+                                cancelResendLastPackageSchedule();
+                                show(getHomeScreen(), output);
                             } else {
-                                if (action == lastPackageSentIndex) {
-                                    resendLastPackage(output);
-                                } else if (action == lastPackageSentIndex + 1
-                                        && action < packagesReadyToSend.size()) {
-
-                                    cancelResendLastPackageSchedule();
-                                    sendNewPackage(packagesReadyToSend.get(action), output, action);
-                                } else if (action > packagesReadyToSend.size() - 1) {
-                                    show("o dado acabou", output);
-                                    isTransferring = false;
-                                    show(getHomeScreen(), output);
-                                }
+                                if (Logger.ISLOGABLE) Logger.d(TAG, "no match param");
+                                show(getErrorMessage(USER_ENTRY_CODE_ERROR_NO_MATCH_PARAM), output);
                             }
                         }
                     }
                 }
 
             } finally {
+                if (Logger.ISLOGABLE) Logger.d("startServer", "server was closed");
                 socket.close();
             }
         } catch (IOException e) {
+            if (Logger.ISLOGABLE) Logger.d("startServer", "server could not start");
             e.printStackTrace();
         }
     }
 
     private void sendNewPackage(String newPackage, PrintWriter output, int index) {
-        String TAG = "enviaNovoPacote";
+        String TAG = "sendNewPackage";
 
         lastPackageSentBackup = newPackage;
         lastPackageSentIndex = index;
@@ -180,7 +192,7 @@ public class STTP1 {
     }
 
     private void resendLastPackageSchedule(String lastPackage, PrintWriter output) {
-        String TAG = "agendaReenvioUltimoPacote";
+        String TAG = "resendLastPackageSchedule";
 
         if (Logger.ISLOGABLE) Logger.d(TAG, "agendando reenvio de pacote: " + lastPackage);
 
@@ -189,7 +201,7 @@ public class STTP1 {
     }
 
     private void cancelResendLastPackageSchedule() {
-        String TAG = "cancelaAgendamentoReenvioUltimoPacote";
+        String TAG = "cancelResendLastPackageSchedule";
 
         if (Logger.ISLOGABLE) Logger.d(TAG, "cancelando reenvio de pacote");
         resendPackageTask.cancel();
@@ -233,7 +245,9 @@ public class STTP1 {
 
             } else {
                 try {
-                    return Integer.parseInt(userInput);
+                    int value = Integer.parseInt(userInput);
+                    if (Logger.ISLOGABLE) Logger.d(TAG, "user input integer value: " + value);
+                    return value;
                 } catch (Exception e) {
                     if (Logger.ISLOGABLE) Logger.d(TAG, "error to convert into integer");
                 }
@@ -289,11 +303,11 @@ public class STTP1 {
         return packageWithHeader;
     }
 
-    private String getDialogMessage(int dialog){
+    private String getDialogMessage(int dialog) {
         String TAG = "getDialogMessage";
         String dialogMessage = "";
 
-        if (dialog == DIALOG_MESSAGE_END_PROGRAM){
+        if (dialog == DIALOG_MESSAGE_END_PROGRAM) {
             if (Logger.ISLOGABLE) Logger.d(TAG, "DIALOG_MESSAGE_END_PROGRAM");
             dialogMessage += "\n";
             dialogMessage += "--------------------------------------------------------------------------------------------------";
@@ -328,8 +342,9 @@ public class STTP1 {
             dialogMessage += "\n";
             return dialogMessage;
         }
-        return  dialogMessage;
+        return dialogMessage;
     }
+
     private String getErrorMessage(int error) {
         String TAG = "getErrorMessage";
         String errorMessage = "";
@@ -362,9 +377,9 @@ public class STTP1 {
             errorMessage += "\n";
             errorMessage += "--------------------------------------------------------------------------------------------------";
             return errorMessage;
-        } else if (error == INTERN_ERROR_LAST_PACKAGE_INDEX_NOT_A_NUMBER) {//not used yet
+        } else if (error == USER_ENTRY_CODE_ERROR_NOT_VALID_NUMBER) {//not used yet
             if (Logger.ISLOGABLE) Logger.d(TAG, "INTERN_ERROR_LAST_PACKAGE_INDEX_NOT_A_NUMBER "
-                    + INTERN_ERROR_LAST_PACKAGE_INDEX_NOT_A_NUMBER);
+                    + USER_ENTRY_CODE_ERROR_NOT_VALID_NUMBER);
             errorMessage += "\n";
             errorMessage += "--------------------------------------------------------------------------------------------------";
             errorMessage += "\n";
@@ -434,6 +449,7 @@ public class STTP1 {
 
         return homeScreen;
     }
+
     private static class ResendPackageTask extends TimerTask {
 
 
