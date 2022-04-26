@@ -21,7 +21,11 @@ public class App {
                 "Sweet family will die " +
                 "Killer on the road, yeah";
 
-        STTP1 serverRefactoring = new STTP1(8189, 80, 70, dataToTransfer,15);
-        serverRefactoring.startServer();
+        String pageContent = "lalalalalalalal";
+
+            STTP1 serverRefactoring = new STTP1(8189, 80, 70,
+                    dataToTransfer,15, pageContent);
+            serverRefactoring.startServer();
+
     }
 }

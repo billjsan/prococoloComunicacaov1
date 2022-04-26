@@ -25,6 +25,7 @@ public class STTP1 {
     private final int USER_ENTRY_CODE_END = -14;
     private final int USER_ENTRY_CODE_BEGIN = -15;
     private final int USER_ENTRY_CODE_HELP = -16;
+    private final int USER_ENTRY_CODE_GET_PAGE = -55;
 
     private final int DIALOG_MESSAGE_END_PROGRAM = -17;
     private final int DIALOG_MESSAGE_END_TRANSFERENCE = -18;
@@ -41,11 +42,13 @@ public class STTP1 {
     private List<String> packagesReadyToSend = new ArrayList<>();
     private String lastPackageSentBackup = null;
     private final String DATASET;
+    private final String PAGE_CONTENT;
 
     /**
      * variaveis de controle
      */
     private boolean isTransferring = false;
+    private boolean isTransferringPage = false;
     private boolean isServerRunning = true;
     private int lastPackageSentIndex = -1;
 
@@ -56,13 +59,14 @@ public class STTP1 {
     private ResendPackageTask resendPackageTask;
 
     public STTP1(int port, int chanceToSendAnPackage, int maxLengthPack, String dataset,
-                 int delayToResendLAstPackage) {
+                 int delayToResendLAstPackage, String pageContent) {
 
         this.MAX_LENGTH_PACK = maxLengthPack;
         this.PORT = port;
         this.chanceToSendAnPackage = chanceToSendAnPackage;
         this.DATASET = dataset;
         this.DELAY_RESEND_LAST_PACKAGE = (delayToResendLAstPackage * 1000);
+        this.PAGE_CONTENT = pageContent;
     }
 
     /**
@@ -124,6 +128,9 @@ public class STTP1 {
                             case USER_ENTRY_CODE_ERROR_NOT_VALID_TEXT:
                                 show(getErrorMessage(USER_ENTRY_CODE_ERROR_NOT_VALID_TEXT), output);
                                 break;
+                            case USER_ENTRY_CODE_GET_PAGE:
+                                isTransferringPage = true;
+                                break;
                         }
 
                         if (isTransferring) {
@@ -157,6 +164,12 @@ public class STTP1 {
                                 show(getErrorMessage(USER_ENTRY_CODE_ERROR_NO_MATCH_PARAM), output);
                             }
                         }
+                        if (isTransferringPage){
+                            String TAG = "isTransferringPage";
+                            if (Logger.ISLOGABLE) Logger.d(TAG, "start sending page content");
+                            sendPageContent(output);
+                            isTransferringPage = false;
+                        }
                     }
                 }
 
@@ -168,6 +181,12 @@ public class STTP1 {
             if (Logger.ISLOGABLE) Logger.d("startServer", "server could not start");
             e.printStackTrace();
         }
+    }
+
+    private void sendPageContent(PrintWriter output){
+        String TAG = "sendPageContent";
+        if (Logger.ISLOGABLE)Logger.d(TAG, "sendPageContent");
+        output.println(PAGE_CONTENT);
     }
 
     private void sendNewPackage(String newPackage, PrintWriter output, int index) {
@@ -227,6 +246,10 @@ public class STTP1 {
                 case "help":
                     if (Logger.ISLOGABLE) Logger.d(TAG, "USER_ENTRY_CODE_HELP");
                     return USER_ENTRY_CODE_HELP;
+
+                case "_get":
+                    if (Logger.ISLOGABLE) Logger.d(TAG, "USER_ENTRY_CODE_GET_PAGE");
+                    return USER_ENTRY_CODE_GET_PAGE;
 
                 default:
                     if (Logger.ISLOGABLE) Logger.d(TAG, "USER_ENTRY_CODE_ERROR_NOT_VALID_TEXT");
