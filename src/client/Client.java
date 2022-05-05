@@ -27,12 +27,13 @@ public class Client {
         MainWindow window = new MainWindow();
 
         while (!window.hasUserSetAddress()){
-
             System.out.println("waiting user input");
         }
         IP = window.getIP();
         PORT = Integer.parseInt(window.getPORT());
 
+        System.out.println(IP);
+        System.out.println(PORT);
 
         try {
             socket = new Socket(IP, PORT);
@@ -44,13 +45,22 @@ public class Client {
 
             output.println("_get");
 
-            String msg = "";
-            while(input.hasNextLine()){
-                msg += input.nextLine();
-                //System.out.println(msg);
+            boolean isReceiving = true;
+            StringBuilder receivedText= new StringBuilder();
+
+            while (isReceiving){
+                if(input.hasNextLine()){
+                    receivedText.append(input.nextLine());
+                    if(receivedText.toString().contains("<:end>")){
+                        isReceiving = false;
+                    }
+                    receivedText.replace(receivedText.length() - 6, receivedText.length(), "");
+                }
             }
-            window.setPageContent(msg);
-            window.showPageContent();
+
+            String [] utilText = receivedText.toString().split("<.start>");
+
+            String content = utilText[1]; //texto a ser mostrado
 
         } catch (IOException e) {
             Logger.d("err", "erro");

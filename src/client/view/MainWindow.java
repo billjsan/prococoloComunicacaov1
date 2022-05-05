@@ -15,11 +15,6 @@ public class MainWindow extends JFrame {
     private String PORT;
     private String IP;
 
-    private String pageContent;
-
-    private JTextField pageContentField;
-    private JPanel painelDeConteudo;
-
     boolean userSetAddress = false;
 
     public MainWindow() throws HeadlessException {
@@ -31,10 +26,6 @@ public class MainWindow extends JFrame {
         return userSetAddress;
     }
 
-    public void setPageContent(String content){
-        this.pageContent = content;
-    }
-
     public String getIP(){
         return IP;
     }
@@ -44,10 +35,9 @@ public class MainWindow extends JFrame {
     }
 
     private void createWindow() {
-
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setMinimumSize(new Dimension(1000, 700));
-        this.setLocation(getWidth() / 2, getHeight() / 3);
+        this.setMinimumSize(new Dimension(1000, 300));
+        this.setLocation(getWidth() / 2, getHeight());
         this.setTitle(TITULO_APP);
         Container window = getContentPane();
         this.setLayout(new BoxLayout(window, BoxLayout.Y_AXIS));
@@ -57,24 +47,13 @@ public class MainWindow extends JFrame {
         painelDeTitulo.setLayout(new BoxLayout(painelDeTitulo, BoxLayout.X_AXIS));
 
         //cria o texto para o painel de titulo
-        JLabel textoDoCabecalho = new JLabel("cabeçalho");
+        JLabel textoDoCabecalho = new JLabel("Socket Cliente");
         textoDoCabecalho.setFont(new Font("default", Font.BOLD, 30));
 
         //cria painel de menus
         JPanel painelDeMenu = new JPanel();
         BoxLayout boxLayout = new BoxLayout(painelDeMenu, BoxLayout.X_AXIS);
         painelDeMenu.setLayout(boxLayout);
-
-        //cria painel do conteudo
-        painelDeConteudo = new JPanel();
-        painelDeConteudo.setLayout(new BoxLayout(painelDeConteudo, BoxLayout.X_AXIS));
-
-
-//        pageContentField = new JTextField();
-//        pageContentField.setColumns(10);
-//        pageContentField.setText("");
-//        pageContentField.setEditable(false);
-//        painelDeConteudo.add(pageContentField);
 
         //titulo texto do ip
         JLabel textViewIP = new JLabel();
@@ -115,7 +94,6 @@ public class MainWindow extends JFrame {
 
         window.add(painelDeTitulo);
         window.add(painelDeMenu);
-        window.add(painelDeConteudo);
 
         SetClickListener botaoHandler = new SetClickListener();
         botaoIr.addActionListener(botaoHandler);
@@ -123,13 +101,6 @@ public class MainWindow extends JFrame {
         this.setVisible(true);
     }
 
-    public void showPageContent() {
-        pageContentField = new JTextField();
-        pageContentField.setColumns(10);
-        pageContentField.setText("lalalala");
-        pageContentField.setEditable(false);
-        painelDeConteudo.add(pageContentField);
-    }
 
     private class SetClickListener implements ActionListener {
 
