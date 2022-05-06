@@ -1,6 +1,7 @@
 package client;
 
 
+import client.view.ContentWindow;
 import client.view.MainWindow;
 
 import java.io.IOException;
@@ -11,29 +12,27 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
-
-
-    private  int PORT = 8198;
-    private  String IP = "192.186.0.0";
+    private String TAG = Client.class.getSimpleName();
     private Socket socket = null;
 
     public Client() {
     }
 
-
     public void startClient() {
+        if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "startClient");
         Scanner input;
         PrintWriter output;
         MainWindow window = new MainWindow();
 
-        while (!window.hasUserSetAddress()){
-            System.out.println("waiting user input");
+        while (!window.hasUserSetAddress()) {
+            if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "waiting user input");
         }
-        IP = window.getIP();
-        PORT = Integer.parseInt(window.getPORT());
 
-        System.out.println(IP);
-        System.out.println(PORT);
+        String IP = window.getIP();
+        if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "IP: " + IP);
+
+        int PORT = Integer.parseInt(window.getPORT());
+        if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "PORT: " + PORT);
 
         try {
             socket = new Socket(IP, PORT);
@@ -44,31 +43,36 @@ public class Client {
             output = new PrintWriter(outputStream, true);
 
             output.println("_get");
+            if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "requesting server content");
 
             boolean isReceiving = true;
-            StringBuilder receivedText= new StringBuilder();
+            StringBuilder receivedText = new StringBuilder();
 
-            while (isReceiving){
-                if(input.hasNextLine()){
+            while (isReceiving) {
+                if (input.hasNextLine()) {
                     receivedText.append(input.nextLine());
-                    if(receivedText.toString().contains("<:end>")){
+                    if (receivedText.toString().contains("<:end>")) {
                         isReceiving = false;
+                        if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "stopping content download");
                     }
                     receivedText.replace(receivedText.length() - 6, receivedText.length(), "");
                 }
             }
 
-            String [] utilText = receivedText.toString().split("<.start>");
+            String[] utilText = receivedText.toString().split("<.start>");
 
-            String content = utilText[1]; //texto a ser mostrado
+            ContentWindow contentWindow = new ContentWindow(utilText[1]);
+            window.close();
+            contentWindow.show();
 
         } catch (IOException e) {
-            Logger.d("err", "erro");
+            MyLogger.d(TAG, "erro");
         } finally {
             try {
                 socket.close();
+                if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "closing connection");
             } catch (IOException e) {
-                Logger.d("erro", "erro");
+                MyLogger.d(TAG, "erro");
             }
         }
     }

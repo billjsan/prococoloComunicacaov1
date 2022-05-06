@@ -1,5 +1,7 @@
 package client.view;
 
+import client.MyLogger;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -7,10 +9,9 @@ import java.awt.event.ActionListener;
 
 public class MainWindow extends JFrame {
 
-    private final String TITULO_APP = "STTP - Cliente";
-    private String TEXTO_BOTAO = "ir";
+    private final String TAG = MainWindow.class.getSimpleName();
     private JTextArea editTextIP;
-    private JTextArea editTextPorta;
+    private JTextArea editTextPort;
 
     private String PORT;
     private String IP;
@@ -22,22 +23,30 @@ public class MainWindow extends JFrame {
         createWindow();
     }
 
-    public boolean hasUserSetAddress(){
+    public boolean hasUserSetAddress() {
+
+        if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "hasUserSetAddress");
         return userSetAddress;
     }
 
-    public String getIP(){
+    public String getIP() {
+
+        if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "getIP");
         return IP;
     }
 
-    public String getPORT(){
+    public String getPORT() {
+
+        if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "createWindow");
         return PORT;
     }
 
     private void createWindow() {
+        if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "createWindow");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setMinimumSize(new Dimension(1000, 300));
         this.setLocation(getWidth() / 2, getHeight());
+        String TITULO_APP = "STTP - Cliente";
         this.setTitle(TITULO_APP);
         Container window = getContentPane();
         this.setLayout(new BoxLayout(window, BoxLayout.Y_AXIS));
@@ -62,7 +71,7 @@ public class MainWindow extends JFrame {
 
         //pega texto do ip
         editTextIP = new JTextArea();
-        editTextIP.setMaximumSize(new Dimension(180,20));
+        editTextIP.setMaximumSize(new Dimension(180, 20));
         editTextIP.setFont(new Font("default", Font.ITALIC, 20));
         editTextIP.setRequestFocusEnabled(true);
 
@@ -72,14 +81,14 @@ public class MainWindow extends JFrame {
         textViewPorta.setText(" Porta ");
 
         //pega texto porta
-        editTextPorta = new JTextArea();
-        editTextPorta.setMaximumSize(new Dimension(60,20));
-        editTextPorta.setFont(new Font("default", Font.ITALIC, 20));
+        editTextPort = new JTextArea();
+        editTextPort.setMaximumSize(new Dimension(60, 20));
+        editTextPort.setFont(new Font("default", Font.ITALIC, 20));
 
         //cria botao
-        TEXTO_BOTAO = "ir";
+        String TEXTO_BOTAO = "ir";
         JButton botaoIr = new JButton(TEXTO_BOTAO);
-        botaoIr.setMaximumSize(new Dimension(50,30));
+        botaoIr.setMaximumSize(new Dimension(50, 30));
         botaoIr.setToolTipText(TEXTO_BOTAO);
 
         //painel de titulo
@@ -89,7 +98,7 @@ public class MainWindow extends JFrame {
         painelDeMenu.add(textViewIP);
         painelDeMenu.add(editTextIP);
         painelDeMenu.add(textViewPorta);
-        painelDeMenu.add(editTextPorta);
+        painelDeMenu.add(editTextPort);
         painelDeMenu.add(botaoIr);
 
         window.add(painelDeTitulo);
@@ -101,14 +110,21 @@ public class MainWindow extends JFrame {
         this.setVisible(true);
     }
 
+    public void close() {
+        this.setVisible(false);
+        if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "close");
+
+    }
 
     private class SetClickListener implements ActionListener {
+        private final String TAG = SetClickListener.class.getSimpleName();
 
         @Override
         public void actionPerformed(ActionEvent event) {
 
+            if (MyLogger.ISLOGABLE) MyLogger.d(TAG, "actionPerformed");
             IP = editTextIP.getText();
-            PORT = editTextPorta.getText();
+            PORT = editTextPort.getText();
             userSetAddress = true;
         }
     }
